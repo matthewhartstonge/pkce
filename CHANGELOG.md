@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- :memo: README: adds code verifier verification examples.
+
 ### Fixed
 - :memo: README: fixes a couple of spelling misteaks.
 

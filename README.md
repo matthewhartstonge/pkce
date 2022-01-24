@@ -38,7 +38,10 @@ func main() {
 	fmt.Println("my generated code verifier is:", key.CodeVerifier())
 	fmt.Println("my generated plain code challenge is:", key.CodeChallenge())
 
-	isValid := key.VerifyCodeVerifier("incoming-code-verifier")
+	// Finally - on the server-side side, we can verify the received code 
+	// verifier:
+	receivedCodeVerifier := "#yolo-cant-verify-me-mr-mcbaggins"
+	isValid := key.VerifyCodeVerifier(receivedCodeVerifier)
 	fmt.Println("is the received code verifier valid?", isValid)
 }
 ```
@@ -119,8 +122,11 @@ func main() {
 	fmt.Println("my manually generated code verifier is:", codeVerifier)
 	fmt.Println("my manually generated code challenge is:", codeChallenge)
 
-	// Finally - on the server-side side, we can verify the provided proof key:
-
+	// Finally - on the server-side side, we can verify the received code 
+	// verifier:
+	incomingCodeVerifier := "#yolo-cant-verify-me-mr-mcbaggins"
+	isValid := pkce.VerifyCodeVerifier(pkce.S256, incomingCodeVerifier, codeChallenge)
+	fmt.Println("is the received code verifier valid?", isValid)
 }
 
 ```
