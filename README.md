@@ -2,11 +2,11 @@
 
 `pkce` implements the client side of RFC 7636 "Proof Key for Code Exchange by OAuth Public Clients" (PKCE) to enable the
 generation of cryptographically secure and specification compliant code verifiers and code challenges. With :sparkles:
-no external dependencies :sparkles.
+no external dependencies :sparkles:.
 
 ## Getting Started
 
-`go-pkce` makes use of go mod, you can install it by using go get:
+`pkce` makes use of go mod, you can install it by using go get:
 
 ```shell
 go get github.com/matthewhartstonge/pkce
@@ -16,7 +16,7 @@ go get github.com/matthewhartstonge/pkce
 
 ### Structs
 
-For those that like abstractions, feel free to enjoy "safety":tm::
+For those that like abstractions, feel free to enjoy "safety:tm:":
 
 ```go
 package main
@@ -39,7 +39,7 @@ func main() {
 	fmt.Println("my generated plain code challenge is:", key.CodeChallenge())
 
 	isValid := key.VerifyCodeVerifier("incoming-code-verifier")
-	fmt.Println("is the recieved code verifier valid?", isValid)
+	fmt.Println("is the received code verifier valid?", isValid)
 }
 ```
 
@@ -69,7 +69,7 @@ func main() {
 
 		// pkce.WithCodeVerifier enables BYO code verifier.
 		//
-		// .. I hope you use a secure implementation ...
+		// ... I hope you use a secure implementation ...
 		//
 		// This is mainly useful if you like the struct style of encapsulation, 
 		// or if loading the verifier from a datastore.
