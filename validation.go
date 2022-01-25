@@ -7,11 +7,7 @@ func validateCodeVerifier(verifier []byte) error {
 		return err
 	}
 
-	if err := validateCodeVerifierCharacters(verifier); err != nil {
-		return err
-	}
-
-	return nil
+	return validateCodeVerifierCharacters(verifier)
 }
 
 // validateVerifierLen ensures the length of the code verifier is within the

@@ -131,7 +131,6 @@ func VerifyCodeVerifier(method Method, codeVerifier string, codeChallenge string
 	// received "code_verifier" and comparing it with the previously associated
 	// "code_challenge", after first transforming it according to the
 	// "code_challenge_method" method specified by the client.
-
 	switch method {
 	case Plain:
 		// If the "code_challenge_method" from Section 4.3 was "plain", they are
@@ -172,6 +171,7 @@ func (k *Key) SetChallengeMethod(method Method) error {
 	}
 
 	k.challengeMethod = method
+
 	return nil
 }
 
@@ -191,6 +191,7 @@ func (k *Key) setCodeVerifierLength(n int) error {
 	}
 
 	k.codeVerifierLen = n
+
 	return nil
 }
 
