@@ -18,9 +18,16 @@ var (
 
 	// ErrVerifierCharacters enforces character compliance with the unreserved
 	// character set as specified in RFC 7636, 4.1.
-	ErrVerifierCharacters = errors.New("code verifier must only contain unreserved characters in the set {'" + unreserved + "'}")
+	ErrVerifierCharacters = fmt.Errorf(
+		"code verifier must only contain unreserved characters from the set: {'%s'}",
+		unreserved,
+	)
 
 	// ErrVerifierLength enforces compliance with the minimum and maximum
 	// lengths as specified in RFC 7636, 4.1.
-	ErrVerifierLength = errors.New(fmt.Sprintf("code verifier must be between %d and %d characters long", verifierMinLen, verifierMaxLen))
+	ErrVerifierLength = fmt.Errorf(
+		"code verifier must be between %d and %d characters long",
+		verifierMinLen,
+		verifierMaxLen,
+	)
 )
