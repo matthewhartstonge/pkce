@@ -3,13 +3,19 @@ package pkce
 // Option enables variadic PKCE Key options to be configured.
 type Option func(*Key) error
 
-// WithCodeVerifierLength enables specifying the length of the code verifier
-// to be generated.
-func WithCodeVerifierLength(n int) Option {
+// WithChallengeMethod enables specifying the challenge transformation method.
+// Should only be used to downgrade to plain if required.
+func WithChallengeMethod(method Method) Option {
 	return func(key *Key) (err error) {
-		err = key.setCodeVerifierLength(n)
+		switch method {
+		case Plain, S256:
+			key.challengeMethod = method
 
-		return
+		default:
+			return ErrMethodNotSupported
+		}
+
+		return nil
 	}
 }
 
@@ -24,12 +30,12 @@ func WithCodeVerifier(codeVerifier []byte) Option {
 	}
 }
 
-// WithChallengeMethod enables specifying the challenge transformation method.
-// Should only be used to downgrade to plain if required.
-func WithChallengeMethod(method Method) Option {
+// WithCodeVerifierLength enables specifying the length of the code verifier
+// to be generated.
+func WithCodeVerifierLength(n int) Option {
 	return func(key *Key) (err error) {
-		key.challengeMethod = method
+		err = key.setCodeVerifierLength(n)
 
-		return nil
+		return
 	}
 }

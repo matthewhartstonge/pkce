@@ -166,11 +166,17 @@ type Key struct {
 
 // SetChallengeMethod enables upgrading code challenge generation method.
 func (k *Key) SetChallengeMethod(method Method) error {
-	if k.challengeMethod == S256 && method == Plain {
-		return ErrMethodDowngrade
-	}
+	switch method {
+	case Plain, S256:
+		if k.challengeMethod == S256 && method == Plain {
+			return ErrMethodDowngrade
+		}
 
-	k.challengeMethod = method
+		k.challengeMethod = method
+
+	default:
+		return ErrMethodNotSupported
+	}
 
 	return nil
 }
@@ -186,6 +192,11 @@ func (k *Key) ChallengeMethod() Method {
 // If a code verifier is supplied, this setting will be ignored in favour of
 // using the supplied verifier.
 func (k *Key) setCodeVerifierLength(n int) error {
+	if len(k.codeVerifier) > 0 {
+		// Don't overwrite the set length.
+		return nil
+	}
+
 	if err := validateVerifierLen(n); err != nil {
 		return err
 	}
@@ -215,7 +226,7 @@ func (k *Key) CodeVerifier() string {
 // getCodeVerifier returns a code verifier. If one has not been set, it will
 // generate one based on the configured verifier length.
 func (k *Key) getCodeVerifier() []byte {
-	if k.codeVerifier == nil {
+	if len(k.codeVerifier) == 0 {
 		k.codeVerifier = generateCodeVerifier(k.codeVerifierLen)
 	}
 
@@ -251,13 +262,13 @@ func generateCodeVerifier(n int) (out []byte) {
 
 // generateCodeChallenge performs the transform required by the specified
 // method.
-func generateCodeChallenge(method Method, v []byte) (out string) {
+func generateCodeChallenge(method Method, codeVerifier []byte) (out string) {
 	if method == Plain {
-		return string(v)
+		return string(codeVerifier)
 	}
 
 	s256 := sha256.New()
-	s256.Write(v)
+	s256.Write(codeVerifier)
 
 	return base64.RawURLEncoding.EncodeToString(s256.Sum(nil))
 }
