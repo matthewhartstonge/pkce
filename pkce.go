@@ -192,6 +192,11 @@ func (k *Key) ChallengeMethod() Method {
 // If a code verifier is supplied, this setting will be ignored in favour of
 // using the supplied verifier.
 func (k *Key) setCodeVerifierLength(n int) error {
+	if len(k.codeVerifier) > 0 {
+		// Don't overwrite the set length.
+		return nil
+	}
+
 	if err := validateVerifierLen(n); err != nil {
 		return err
 	}
