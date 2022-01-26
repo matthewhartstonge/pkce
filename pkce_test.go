@@ -255,8 +255,8 @@ func TestKey_CodeVerifier(t *testing.T) {
 					)
 				}
 			} else {
-				if !reflect.DeepEqual(got, string(tt.codeVerifier)) {
-					t.Errorf("getCodeVerifier() = %v, want %v", got, string(tt.codeVerifier))
+				if !reflect.DeepEqual(got, string(tt.wantCodeVerifier)) {
+					t.Errorf("getCodeVerifier() = %v, want %v", got, string(tt.wantCodeVerifier))
 				}
 			}
 		})
@@ -264,12 +264,12 @@ func TestKey_CodeVerifier(t *testing.T) {
 }
 
 type setChallengeMethodTest struct {
-	name        string
-	method      Method
-	wantErr     bool
-	expectedErr error
-	gotKey      *Key
-	expectedKey *Key
+	name      string
+	method    Method
+	gotKey    *Key
+	wantKey   *Key
+	shouldErr bool
+	wantErr   error
 }
 
 func setChallengeMethodTests() []setChallengeMethodTest {
@@ -278,27 +278,27 @@ func setChallengeMethodTests() []setChallengeMethodTest {
 			name:   "should set plain mode",
 			method: Plain,
 			gotKey: &Key{},
-			expectedKey: &Key{
+			wantKey: &Key{
 				challengeMethod: Plain,
 			},
-			wantErr: false,
+			shouldErr: false,
 		},
 		{
 			name:   "should set S256 mode",
 			method: S256,
 			gotKey: &Key{},
-			expectedKey: &Key{
+			wantKey: &Key{
 				challengeMethod: S256,
 			},
-			wantErr: false,
+			shouldErr: false,
 		},
 		{
-			name:        "should error on attempting to set a non-compliant method",
-			method:      "not-a-specification-compliant-method",
-			gotKey:      &Key{},
-			expectedKey: &Key{},
-			wantErr:     true,
-			expectedErr: ErrMethodNotSupported,
+			name:      "should error on attempting to set a non-compliant method",
+			method:    "not-a-specification-compliant-method",
+			gotKey:    &Key{},
+			wantKey:   &Key{},
+			shouldErr: true,
+			wantErr:   ErrMethodNotSupported,
 		},
 		{
 			name:   "should not overwrite challenge method with empty method",
@@ -306,11 +306,11 @@ func setChallengeMethodTests() []setChallengeMethodTest {
 			gotKey: &Key{
 				challengeMethod: S256,
 			},
-			expectedKey: &Key{
+			wantKey: &Key{
 				challengeMethod: S256,
 			},
-			wantErr:     true,
-			expectedErr: ErrMethodNotSupported,
+			shouldErr: true,
+			wantErr:   ErrMethodNotSupported,
 		},
 	}
 }
@@ -318,14 +318,14 @@ func setChallengeMethodTests() []setChallengeMethodTest {
 func TestKey_SetChallengeMethod(t *testing.T) {
 	tests := setChallengeMethodTests()
 	tests = append(tests, setChallengeMethodTest{
-		name:        "Should error on attempting downgrade from S256 to Plain",
-		method:      Plain,
-		wantErr:     true,
-		expectedErr: ErrMethodDowngrade,
+		name:      "Should error on attempting downgrade from S256 to Plain",
+		method:    Plain,
+		shouldErr: true,
+		wantErr:   ErrMethodDowngrade,
 		gotKey: &Key{
 			challengeMethod: S256,
 		},
-		expectedKey: &Key{
+		wantKey: &Key{
 			challengeMethod: S256,
 		},
 	})
@@ -333,83 +333,89 @@ func TestKey_SetChallengeMethod(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.gotKey.SetChallengeMethod(tt.method)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("SetChallengeMethod() should error\ngot:  %v\nwant: %v", err, tt.wantErr)
+			if (err != nil) != tt.shouldErr {
+				t.Errorf("SetChallengeMethod() should error\ngot:  %v, want: %v\n", err, tt.shouldErr)
 			}
 
-			if !reflect.DeepEqual(tt.gotKey, tt.expectedKey) {
-				t.Errorf("SetChallengeMethod() key\ngot: %v\nwant  %v\n", tt.gotKey, tt.expectedKey)
+			if tt.shouldErr {
+				if tt.wantErr != err {
+					t.Errorf("SetChallengeMethod() error type not expected\ngot:  %v, want: %v\n", err, tt.wantErr)
+				}
+			} else {
+				if !reflect.DeepEqual(tt.gotKey, tt.wantKey) {
+					t.Errorf("SetChallengeMethod() key\ngot: %v\nwant  %v\n", tt.gotKey, tt.wantKey)
+				}
 			}
 		})
 	}
 }
 
 type verifyCodeVerifierTest struct {
-	name                 string
-	method               Method
-	expectedCodeVerifier string
-	codeVerifier         string
-	codeChallenge        string
-	want                 bool
+	name             string
+	method           Method
+	wantCodeVerifier string
+	codeVerifier     string
+	codeChallenge    string
+	want             bool
 }
 
 func verifyCodeVerifierTests() []verifyCodeVerifierTest {
 	return []verifyCodeVerifierTest{
 		{
-			name:                 "should not verify invalid code challenge methods",
-			method:               "not-a-method",
-			expectedCodeVerifier: "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
-			codeVerifier:         "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
-			codeChallenge:        "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
-			want:                 false,
+			name:             "should not verify invalid code challenge methods",
+			method:           "not-a-method",
+			wantCodeVerifier: "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
+			codeVerifier:     "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
+			codeChallenge:    "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
+			want:             false,
 		},
 		{
-			name:                 "should not verify invalid plain code verifier",
-			method:               Plain,
-			expectedCodeVerifier: "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
-			codeVerifier:         "this-is-not-the-verifier-you-are-looking-for",
-			codeChallenge:        "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
-			want:                 false,
+			name:             "should not verify invalid plain code verifier",
+			method:           Plain,
+			wantCodeVerifier: "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
+			codeVerifier:     "this-is-not-the-verifier-you-are-looking-for",
+			codeChallenge:    "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
+			want:             false,
 		},
 		{
-			name:                 "should verify valid plain code verifier",
-			method:               Plain,
-			expectedCodeVerifier: "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
-			codeVerifier:         "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
-			codeChallenge:        "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
-			want:                 true,
+			name:             "should verify valid plain code verifier",
+			method:           Plain,
+			wantCodeVerifier: "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
+			codeVerifier:     "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
+			codeChallenge:    "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
+			want:             true,
 		},
 		{
-			name:                 "should not verify non-matching S256 code verifier",
-			method:               S256,
-			expectedCodeVerifier: "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
-			codeVerifier:         "this-is-not-the-verifier-you-are-looking-for",
-			codeChallenge:        "1u1qURRaY4QPquG83Yu2fnyEYp4d0TLhXyj6AnaEcGQ",
-			want:                 false,
+			name:             "should not verify non-matching S256 code verifier",
+			method:           S256,
+			wantCodeVerifier: "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
+			codeVerifier:     "this-is-not-the-verifier-you-are-looking-for",
+			codeChallenge:    "1u1qURRaY4QPquG83Yu2fnyEYp4d0TLhXyj6AnaEcGQ",
+			want:             false,
 		},
 		{
-			name:                 "should not verify invalid length S256 code verifier",
-			method:               S256,
-			expectedCodeVerifier: "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
-			codeVerifier:         "not-the-verifier-you-are-looking-for",
-			codeChallenge:        "1u1qURRaY4QPquG83Yu2fnyEYp4d0TLhXyj6AnaEcGQ",
-			want:                 false,
+			name:             "should not verify invalid length S256 code verifier",
+			method:           S256,
+			wantCodeVerifier: "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
+			codeVerifier:     "not-the-verifier-you-are-looking-for",
+			codeChallenge:    "1u1qURRaY4QPquG83Yu2fnyEYp4d0TLhXyj6AnaEcGQ",
+			want:             false,
 		},
 		{
-			name:                 "should not verify invalid character S256 code verifier",
-			method:               S256,
-			expectedCodeVerifier: "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
-			codeVerifier:         "this-is-not-the-verifier-you-are-looking-for!",
-			codeChallenge:        "1u1qURRaY4QPquG83Yu2fnyEYp4d0TLhXyj6AnaEcGQ",
-			want:                 false,
+			name:             "should not verify invalid character S256 code verifier",
+			method:           S256,
+			wantCodeVerifier: "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
+			codeVerifier:     "this-is-not-the-verifier-you-are-looking-for!",
+			codeChallenge:    "1u1qURRaY4QPquG83Yu2fnyEYp4d0TLhXyj6AnaEcGQ",
+			want:             false,
 		},
 		{
-			name:                 "should verify matching S256 code verifier",
-			method:               S256,
-			expectedCodeVerifier: "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
-			codeVerifier:         "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
-			codeChallenge:        "1u1qURRaY4QPquG83Yu2fnyEYp4d0TLhXyj6AnaEcGQ",
-			want:                 true,
+			name:             "should verify matching S256 code verifier",
+			method:           S256,
+			wantCodeVerifier: "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
+			codeVerifier:     "6et_m_LBa_8A-lHGANCGR0a6KATHyhr~5RU_CskUaaj",
+			codeChallenge:    "1u1qURRaY4QPquG83Yu2fnyEYp4d0TLhXyj6AnaEcGQ",
+			want:             true,
 		},
 	}
 }
@@ -421,7 +427,7 @@ func TestKey_VerifyCodeVerifier(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			k := &Key{
 				challengeMethod: tt.method,
-				codeVerifier:    []byte(tt.expectedCodeVerifier),
+				codeVerifier:    []byte(tt.wantCodeVerifier),
 			}
 			if got := k.VerifyCodeVerifier(tt.codeVerifier); got != tt.want {
 				t.Errorf("VerifyCodeVerifier() = %v, want %v", got, tt.want)
@@ -431,42 +437,42 @@ func TestKey_VerifyCodeVerifier(t *testing.T) {
 }
 
 type getCodeVerifierTest struct {
-	name                 string
-	shouldGenerate       bool
-	codeVerifierLen      int
-	codeVerifier         []byte
-	expectedCodeVerifier []byte
+	name             string
+	shouldGenerate   bool
+	codeVerifierLen  int
+	codeVerifier     []byte
+	wantCodeVerifier []byte
 }
 
 func getCodeVerifierTests() []getCodeVerifierTest {
 	return []getCodeVerifierTest{
 		{
-			name:                 "should generate code verifier, if verifier is nil",
-			shouldGenerate:       true,
-			codeVerifierLen:      45,
-			codeVerifier:         nil,
-			expectedCodeVerifier: nil,
+			name:             "should generate code verifier, if verifier is nil",
+			shouldGenerate:   true,
+			codeVerifierLen:  45,
+			codeVerifier:     nil,
+			wantCodeVerifier: nil,
 		},
 		{
-			name:                 "should generate code verifier, if verifier is empty",
-			shouldGenerate:       true,
-			codeVerifierLen:      50,
-			codeVerifier:         []byte{},
-			expectedCodeVerifier: nil,
+			name:             "should generate code verifier, if verifier is empty",
+			shouldGenerate:   true,
+			codeVerifierLen:  50,
+			codeVerifier:     []byte{},
+			wantCodeVerifier: nil,
 		},
 		{
-			name:                 "should return set code verifier",
-			shouldGenerate:       false,
-			codeVerifierLen:      verifierMinLen,
-			codeVerifier:         []byte(strings.Repeat("a", verifierMinLen)),
-			expectedCodeVerifier: []byte(strings.Repeat("a", verifierMinLen)),
+			name:             "should return set code verifier",
+			shouldGenerate:   false,
+			codeVerifierLen:  verifierMinLen,
+			codeVerifier:     []byte(strings.Repeat("a", verifierMinLen)),
+			wantCodeVerifier: []byte(strings.Repeat("a", verifierMinLen)),
 		},
 		{
-			name:                 "should not generate if a code verifier if set",
-			shouldGenerate:       false,
-			codeVerifierLen:      100,
-			codeVerifier:         []byte(strings.Repeat("a", verifierMinLen)),
-			expectedCodeVerifier: []byte(strings.Repeat("a", verifierMinLen)),
+			name:             "should not generate if a code verifier if set",
+			shouldGenerate:   false,
+			codeVerifierLen:  100,
+			codeVerifier:     []byte(strings.Repeat("a", verifierMinLen)),
+			wantCodeVerifier: []byte(strings.Repeat("a", verifierMinLen)),
 		},
 	}
 }
@@ -493,8 +499,8 @@ func TestKey_getCodeVerifier(t *testing.T) {
 					)
 				}
 			} else {
-				if !reflect.DeepEqual(got, tt.codeVerifier) {
-					t.Errorf("getCodeVerifier() = %v, want %v", got, tt.codeVerifier)
+				if !reflect.DeepEqual(got, tt.wantCodeVerifier) {
+					t.Errorf("getCodeVerifier() = %v, want %v", got, tt.wantCodeVerifier)
 				}
 			}
 		})
@@ -505,9 +511,9 @@ type setCodeVerifierTest struct {
 	name         string
 	codeVerifier []byte
 	gotKey       *Key
-	expectedKey  *Key
-	wantErr      bool
-	expectedErr  error
+	wantKey      *Key
+	shouldErr    bool
+	wantErr      error
 }
 
 func setCodeVerifierTests() []setCodeVerifierTest {
@@ -516,35 +522,35 @@ func setCodeVerifierTests() []setCodeVerifierTest {
 			name:         "should not set an empty verifier",
 			codeVerifier: []byte{},
 			gotKey:       &Key{},
-			expectedKey:  &Key{},
-			wantErr:      true,
-			expectedErr:  ErrVerifierLength,
+			wantKey:      &Key{},
+			shouldErr:    true,
+			wantErr:      ErrVerifierLength,
 		},
 		{
 			name:         "should error configuring an invalid verifier length",
 			codeVerifier: []byte(strings.Repeat("a", verifierMinLen-1)),
 			gotKey:       &Key{},
-			expectedKey:  &Key{},
-			wantErr:      true,
-			expectedErr:  ErrVerifierLength,
+			wantKey:      &Key{},
+			shouldErr:    true,
+			wantErr:      ErrVerifierLength,
 		},
 		{
 			name:         "should error configuring an invalid verifier character",
 			codeVerifier: []byte(strings.Repeat("a", verifierMinLen) + "!"),
 			gotKey:       &Key{},
-			expectedKey:  &Key{},
-			wantErr:      true,
-			expectedErr:  ErrVerifierCharacters,
+			wantKey:      &Key{},
+			shouldErr:    true,
+			wantErr:      ErrVerifierCharacters,
 		},
 		{
 			name:         "should set a valid verifier",
 			codeVerifier: []byte(strings.Repeat("a", verifierMinLen)),
 			gotKey:       &Key{},
-			expectedKey: &Key{
+			wantKey: &Key{
 				codeVerifier:    []byte(strings.Repeat("a", verifierMinLen)),
 				codeVerifierLen: verifierMinLen,
 			},
-			wantErr: false,
+			shouldErr: false,
 		},
 		{
 			name:         "should overwrite code verifier length",
@@ -552,11 +558,11 @@ func setCodeVerifierTests() []setCodeVerifierTest {
 			gotKey: &Key{
 				codeVerifierLen: 100,
 			},
-			expectedKey: &Key{
+			wantKey: &Key{
 				codeVerifier:    []byte(strings.Repeat("a", verifierMinLen)),
 				codeVerifierLen: verifierMinLen,
 			},
-			wantErr: false,
+			shouldErr: false,
 		},
 	}
 }
@@ -567,50 +573,56 @@ func TestKey_setCodeVerifier(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.gotKey.setCodeVerifier(tt.codeVerifier)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("setCodeVerifier() should error\ngot:  %v\nwant: %v", err, tt.wantErr)
+			if (err != nil) != tt.shouldErr {
+				t.Errorf("setCodeVerifier() should error\ngot:  %v, want: %v\n", err, tt.shouldErr)
 			}
 
-			if !reflect.DeepEqual(tt.gotKey, tt.expectedKey) {
-				t.Errorf("setCodeVerifier() key\ngot: %v\nwant  %v\n", tt.gotKey, tt.expectedKey)
+			if tt.shouldErr {
+				if tt.wantErr != err {
+					t.Errorf("setCodeVerifier() error type not expected\ngot:  %v, want: %v\n", err, tt.wantErr)
+				}
+			} else {
+				if !reflect.DeepEqual(tt.gotKey, tt.wantKey) {
+					t.Errorf("setCodeVerifier() key\ngot: %v\nwant  %v\n", tt.gotKey, tt.wantKey)
+				}
 			}
 		})
 	}
 }
 
 type setCodeVerifierLengthTest struct {
-	name        string
-	n           int
-	gotKey      *Key
-	expectedKey *Key
-	wantErr     bool
-	expectedErr error
+	name      string
+	n         int
+	gotKey    *Key
+	wantKey   *Key
+	shouldErr bool
+	wantErr   error
 }
 
 func setCodeVerifierLengthTests() []setCodeVerifierLengthTest {
 	return []setCodeVerifierLengthTest{
 		{
-			name:        "should not set a negative value",
-			n:           -10,
-			gotKey:      &Key{},
-			expectedKey: &Key{},
-			wantErr:     true,
-			expectedErr: ErrVerifierLength,
+			name:      "should not set a negative value",
+			n:         -10,
+			gotKey:    &Key{},
+			wantKey:   &Key{},
+			shouldErr: true,
+			wantErr:   ErrVerifierLength,
 		},
 		{
-			name:        "should set a valid verifier length",
-			n:           verifierMinLen,
-			gotKey:      &Key{},
-			expectedKey: &Key{codeVerifierLen: verifierMinLen},
-			wantErr:     false,
+			name:      "should set a valid verifier length",
+			n:         verifierMinLen,
+			gotKey:    &Key{},
+			wantKey:   &Key{codeVerifierLen: verifierMinLen},
+			shouldErr: false,
 		},
 		{
-			name:        "should not overwrite codeVerifierLen with an invalid value",
-			n:           -10,
-			gotKey:      &Key{codeVerifierLen: verifierMinLen},
-			expectedKey: &Key{codeVerifierLen: verifierMinLen},
-			wantErr:     true,
-			expectedErr: ErrVerifierLength,
+			name:      "should not overwrite codeVerifierLen with an invalid value",
+			n:         -10,
+			gotKey:    &Key{codeVerifierLen: verifierMinLen},
+			wantKey:   &Key{codeVerifierLen: verifierMinLen},
+			shouldErr: true,
+			wantErr:   ErrVerifierLength,
 		},
 		{
 			name: "should not overwrite code verifier length if code verifier is already set",
@@ -619,11 +631,11 @@ func setCodeVerifierLengthTests() []setCodeVerifierLengthTest {
 				codeVerifier:    []byte(strings.Repeat("a", verifierMinLen+1)),
 				codeVerifierLen: verifierMinLen + 1,
 			},
-			expectedKey: &Key{
+			wantKey: &Key{
 				codeVerifier:    []byte(strings.Repeat("a", verifierMinLen+1)),
 				codeVerifierLen: verifierMinLen + 1,
 			},
-			wantErr: false,
+			shouldErr: false,
 		},
 	}
 }
@@ -634,12 +646,18 @@ func TestKey_setCodeVerifierLength(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.gotKey.setCodeVerifierLength(tt.n)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("setCodeVerifierLength() should error\ngot:  %v\nwant: %v", err, tt.wantErr)
+			if (err != nil) != tt.shouldErr {
+				t.Errorf("setCodeVerifierLength() should error\ngot:  %v, want: %v\n", err, tt.shouldErr)
 			}
 
-			if !reflect.DeepEqual(tt.gotKey, tt.expectedKey) {
-				t.Errorf("setCodeVerifierLength() key\ngot: %v\nwant  %v\n", tt.gotKey, tt.expectedKey)
+			if tt.shouldErr {
+				if tt.wantErr != err {
+					t.Errorf("setCodeVerifierLength() error type not expected\ngot:  %v, want: %v\n", err, tt.wantErr)
+				}
+			} else {
+				if !reflect.DeepEqual(tt.gotKey, tt.wantKey) {
+					t.Errorf("setCodeVerifierLength() key\ngot: %v\nwant  %v\n", tt.gotKey, tt.wantKey)
+				}
 			}
 		})
 	}
@@ -683,10 +701,10 @@ func TestNew(t *testing.T) {
 	}
 
 	tests := []struct {
-		name    string
-		args    args
-		wantKey *Key
-		wantErr bool
+		name      string
+		args      args
+		wantKey   *Key
+		shouldErr bool
 	}{
 		{
 			name: "should enforce verifier minimum length and S256 as a default",
@@ -697,7 +715,7 @@ func TestNew(t *testing.T) {
 				challengeMethod: S256,
 				codeVerifierLen: verifierMinLen,
 			},
-			wantErr: false,
+			shouldErr: false,
 		},
 		{
 			name: "should error with invalid code challenge method via option WithChallengeMethod",
@@ -710,7 +728,7 @@ func TestNew(t *testing.T) {
 				challengeMethod: S256,
 				codeVerifierLen: verifierMinLen,
 			},
-			wantErr: true,
+			shouldErr: true,
 		},
 		{
 			name: "should set code challenge method via option WithChallengeMethod",
@@ -723,7 +741,7 @@ func TestNew(t *testing.T) {
 				challengeMethod: Plain,
 				codeVerifierLen: verifierMinLen,
 			},
-			wantErr: false,
+			shouldErr: false,
 		},
 		{
 			name: "should error with invalid code verifier via option WithCodeVerifier",
@@ -736,7 +754,7 @@ func TestNew(t *testing.T) {
 				challengeMethod: S256,
 				codeVerifierLen: verifierMinLen,
 			},
-			wantErr: true,
+			shouldErr: true,
 		},
 		{
 			name: "should set code challenge method via option WithCodeVerifier",
@@ -750,7 +768,7 @@ func TestNew(t *testing.T) {
 				codeVerifierLen: verifierMinLen,
 				codeVerifier:    []byte(strings.Repeat("a", verifierMinLen)),
 			},
-			wantErr: false,
+			shouldErr: false,
 		},
 		{
 			name: "should error with invalid code verifier length with option WithCodeVerifierLength",
@@ -763,7 +781,7 @@ func TestNew(t *testing.T) {
 				challengeMethod: S256,
 				codeVerifierLen: verifierMinLen,
 			},
-			wantErr: true,
+			shouldErr: true,
 		},
 		{
 			name: "should set code verifier length with option",
@@ -776,7 +794,7 @@ func TestNew(t *testing.T) {
 				challengeMethod: S256,
 				codeVerifierLen: 100,
 			},
-			wantErr: false,
+			shouldErr: false,
 		},
 		{
 			name: "should set multiple options at once",
@@ -790,7 +808,7 @@ func TestNew(t *testing.T) {
 				challengeMethod: Plain,
 				codeVerifierLen: verifierMaxLen,
 			},
-			wantErr: false,
+			shouldErr: false,
 		},
 		{
 			name: "should set all options at once",
@@ -806,7 +824,7 @@ func TestNew(t *testing.T) {
 				codeVerifierLen: verifierMinLen + 1,
 				codeVerifier:    []byte(strings.Repeat("a", verifierMinLen+1)),
 			},
-			wantErr: false,
+			shouldErr: false,
 		},
 		{
 			name: "should error if one of the provided options is invalid",
@@ -821,15 +839,15 @@ func TestNew(t *testing.T) {
 				challengeMethod: Plain,
 				codeVerifierLen: verifierMinLen + 20,
 			},
-			wantErr: true,
+			shouldErr: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotKey, err := New(tt.args.opts...)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
+			if (err != nil) != tt.shouldErr {
+				t.Errorf("New() error = %v, shouldErr = %v", err, tt.shouldErr)
 				return
 			}
 			if !reflect.DeepEqual(gotKey, tt.wantKey) {
