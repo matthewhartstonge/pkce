@@ -251,13 +251,13 @@ func generateCodeVerifier(n int) (out []byte) {
 
 // generateCodeChallenge performs the transform required by the specified
 // method.
-func generateCodeChallenge(method Method, v []byte) (out string) {
+func generateCodeChallenge(method Method, codeVerifier []byte) (out string) {
 	if method == Plain {
-		return string(v)
+		return string(codeVerifier)
 	}
 
 	s256 := sha256.New()
-	s256.Write(v)
+	s256.Write(codeVerifier)
 
 	return base64.RawURLEncoding.EncodeToString(s256.Sum(nil))
 }
