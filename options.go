@@ -7,7 +7,13 @@ type Option func(*Key) error
 // Should only be used to downgrade to plain if required.
 func WithChallengeMethod(method Method) Option {
 	return func(key *Key) (err error) {
-		key.challengeMethod = method
+		switch method {
+		case Plain, S256:
+			key.challengeMethod = method
+
+		default:
+			return ErrMethodNotSupported
+		}
 
 		return nil
 	}
