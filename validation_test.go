@@ -115,6 +115,14 @@ func Test_validateVerifierLen(t *testing.T) {
 		expectedErr error
 	}{
 		{
+			name: "should error if value is negative",
+			args: args{
+				n: -1,
+			},
+			wantErr:     true,
+			expectedErr: ErrVerifierLength,
+		},
+		{
 			name: fmt.Sprintf("should error if length is smaller than min length (%d)", verifierMinLen),
 			args: args{
 				n: verifierMinLen - 1,
