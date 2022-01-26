@@ -1,4 +1,4 @@
-name: development
+name: build
 on: [ push, pull_request ]
 
 jobs:
@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ 1.12, 1.13, 1.14, 1.15, 1.16, 1.17 ]
+        go: [ 1.11, 1.12, 1.13, 1.14, 1.15, 1.16, 1.17 ]
 
     steps:
       - uses: actions/checkout@v2
@@ -37,7 +37,7 @@ jobs:
     needs: lint
     strategy:
       matrix:
-        go: [ 1.12, 1.13, 1.14, 1.15, 1.16, 1.17 ]
+        go: [ 1.11, 1.12, 1.13, 1.14, 1.15, 1.16, 1.17 ]
 
     steps:
       - uses: actions/checkout@v2

@@ -2,8 +2,7 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/matthewhartstonge/pkce.svg)](https://pkg.go.dev/github.com/matthewhartstonge/pkce)
 [![Go Report Card](https://goreportcard.com/badge/github.com/matthewhartstonge/pkce)](https://goreportcard.com/report/github.com/matthewhartstonge/pkce)
-[![Go Test](https://github.com/matthewhartstonge/pkce/actions/workflows/go.yml/badge.svg?branch=main)](https://github.com/matthewhartstonge/pkce/actions/workflows/go.yml)
-[![golangci-lint](https://github.com/matthewhartstonge/pkce/actions/workflows/golangci-lint.yml/badge.svg?branch=main)](https://github.com/matthewhartstonge/pkce/actions/workflows/golangci-lint.yml)
+[![Build](https://github.com/matthewhartstonge/pkce/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/matthewhartstonge/pkce/actions/workflows/build.yml)
 
 `pkce` implements the client side of RFC 7636 "Proof Key for Code Exchange by OAuth Public Clients" (PKCE) to enable the
 generation of cryptographically secure and specification compliant code verifiers and code challenges. With :sparkles:
