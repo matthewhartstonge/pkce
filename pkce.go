@@ -226,7 +226,7 @@ func (k *Key) CodeVerifier() string {
 // getCodeVerifier returns a code verifier. If one has not been set, it will
 // generate one based on the configured verifier length.
 func (k *Key) getCodeVerifier() []byte {
-	if k.codeVerifier == nil {
+	if len(k.codeVerifier) == 0 {
 		k.codeVerifier = generateCodeVerifier(k.codeVerifierLen)
 	}
 
