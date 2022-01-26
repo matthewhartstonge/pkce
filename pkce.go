@@ -166,11 +166,17 @@ type Key struct {
 
 // SetChallengeMethod enables upgrading code challenge generation method.
 func (k *Key) SetChallengeMethod(method Method) error {
-	if k.challengeMethod == S256 && method == Plain {
-		return ErrMethodDowngrade
-	}
+	switch method {
+	case Plain, S256:
+		if k.challengeMethod == S256 && method == Plain {
+			return ErrMethodDowngrade
+		}
 
-	k.challengeMethod = method
+		k.challengeMethod = method
+
+	default:
+		return ErrMethodNotSupported
+	}
 
 	return nil
 }

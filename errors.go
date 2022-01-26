@@ -16,6 +16,9 @@ var (
 	// trying a downgrade attack.
 	ErrMethodDowngrade = errors.New("clients must not downgrade to 'plain' after trying the 'S256' method")
 
+	// ErrMethodNotSupported enforces the use of compliant transform methods
+	ErrMethodNotSupported = errors.New("clients must use either 'plain' or 'S256' as a transform method")
+
 	// ErrVerifierCharacters enforces character compliance with the unreserved
 	// character set as specified in RFC 7636, 4.1.
 	ErrVerifierCharacters = fmt.Errorf(
