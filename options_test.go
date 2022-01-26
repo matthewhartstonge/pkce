@@ -13,12 +13,18 @@ func TestWithChallengeMethod(t *testing.T) {
 			opt := WithChallengeMethod(tt.method)
 
 			err := opt(tt.gotKey)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("WithChallengeMethod() should error\ngot:  %v\nwant: %v", err, tt.wantErr)
+			if (err != nil) != tt.shouldErr {
+				t.Errorf("WithChallengeMethod() should error\ngot:  %v, want: %v\n", err, tt.shouldErr)
 			}
 
-			if !reflect.DeepEqual(tt.gotKey, tt.expectedKey) {
-				t.Errorf("WithChallengeMethod() key\ngot: %v\nwant  %v\n", tt.gotKey, tt.expectedKey)
+			if tt.shouldErr {
+				if tt.wantErr != err {
+					t.Errorf("WithChallengeMethod() error type not expected\ngot:  %v, want: %v\n", err, tt.wantErr)
+				}
+			} else {
+				if !reflect.DeepEqual(tt.gotKey, tt.wantKey) {
+					t.Errorf("WithChallengeMethod() key\ngot: %v\nwant  %v\n", tt.gotKey, tt.wantKey)
+				}
 			}
 		})
 	}
@@ -32,12 +38,18 @@ func TestWithCodeVerifier(t *testing.T) {
 			opt := WithCodeVerifier(tt.codeVerifier)
 
 			err := opt(tt.gotKey)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("WithCodeVerifier() should error\ngot:  %v\nwant: %v", err, tt.wantErr)
+			if (err != nil) != tt.shouldErr {
+				t.Errorf("WithCodeVerifier() should error\ngot:  %v, want: %v\n", err, tt.shouldErr)
 			}
 
-			if !reflect.DeepEqual(tt.gotKey, tt.expectedKey) {
-				t.Errorf("WithCodeVerifier() key\ngot: %v\nwant  %v\n", tt.gotKey, tt.expectedKey)
+			if tt.shouldErr {
+				if tt.wantErr != err {
+					t.Errorf("WithCodeVerifier() error type not expected\ngot:  %v, want: %v\n", err, tt.wantErr)
+				}
+			} else {
+				if !reflect.DeepEqual(tt.gotKey, tt.wantKey) {
+					t.Errorf("WithCodeVerifier() key\ngot: %v\nwant  %v\n", tt.gotKey, tt.wantKey)
+				}
 			}
 		})
 	}
@@ -51,12 +63,18 @@ func TestWithCodeVerifierLength(t *testing.T) {
 			opt := WithCodeVerifierLength(tt.n)
 
 			err := opt(tt.gotKey)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("WithCodeVerifierLength() should error\ngot:  %v\nwant: %v", err, tt.wantErr)
+			if (err != nil) != tt.shouldErr {
+				t.Errorf("WithCodeVerifierLength() should error\ngot:  %v, want: %v\n", err, tt.shouldErr)
 			}
 
-			if !reflect.DeepEqual(tt.gotKey, tt.expectedKey) {
-				t.Errorf("WithCodeVerifierLength() key\ngot: %v\nwant  %v\n", tt.gotKey, tt.expectedKey)
+			if tt.shouldErr {
+				if tt.wantErr != err {
+					t.Errorf("WithCodeVerifierLength() error type not expected\ngot:  %v, want: %v\n", err, tt.wantErr)
+				}
+			} else {
+				if !reflect.DeepEqual(tt.gotKey, tt.wantKey) {
+					t.Errorf("WithCodeVerifierLength() key\ngot: %v\nwant  %v\n", tt.gotKey, tt.wantKey)
+				}
 			}
 		})
 	}
