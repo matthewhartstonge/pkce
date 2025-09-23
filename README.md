@@ -1,3 +1,5 @@
+# Project Archived: PKCE support has been added to Golang's [x/oauth2](https://github.com/golang/oauth2/blob/master/pkce.go) library! 🎉
+
 # pkce
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/matthewhartstonge/pkce.svg)](https://pkg.go.dev/github.com/matthewhartstonge/pkce)
